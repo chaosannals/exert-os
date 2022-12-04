@@ -1,25 +1,35 @@
-#![no_std]                       // <1>
-#![no_main]                      // <1>
-#![feature(core_intrinsics)]     // <2>
+#![feature(core_intrinsics)]
+#![feature(lang_items)]
+#![no_std]
+#![no_main]
 
-use core::intrinsics;            // <2>
-use core::panic::PanicInfo;      // <3>
+mod vga;
+
+use core::fmt::Write;
+use core::panic::PanicInfo;
+use x86_64::instructions::{hlt};
+use vga::{ Cursor };
 
 #[panic_handler]
 #[no_mangle]
-pub fn panic(_info: &PanicInfo) -> ! {
-  intrinsics::abort();           // <4>
+pub fn panic(info: &PanicInfo) -> ! {
+  let mut cursor = Cursor::new();
+  for _ in 0..(80*25) {
+    cursor.print(b" ");
+  }
+  cursor.to_begin();
+  write!(cursor, "{}", info).unwrap();
+
+  loop {
+    hlt();
+  }
 }
+
+#[lang = "eh_personality"]
+#[no_mangle]
+pub extern "C" fn eh_personality() { }
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-  let framebuffer = 0xb8000 as *mut u8;
-
-  unsafe {
-    framebuffer
-      .offset(1)                 // <5>
-      .write_volatile(0x30);     // <6>
-  }
-
-  loop {}
+  panic!("help!");
 }
