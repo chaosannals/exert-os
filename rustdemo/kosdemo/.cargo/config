@@ -1,0 +1,12 @@
+# 指定构建的配置文件 --target x86_64.json
+[build]
+target = "x86_64.json"
+
+# 因为禁用了标准库，使用编译内建的功能替代。
+[unstable]
+build-std-features = ["compiler-builtins-mem"]
+build-std = ["core", "compiler_builtins"]
+
+# 启动
+[target.'cfg(target_os = "none")']
+runner = "bootimage runner"

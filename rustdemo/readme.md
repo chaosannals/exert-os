@@ -6,6 +6,9 @@
 # 打印 rust 编译器目录
 rustc --print sysroot
 
+# 查看开发工具版本
+rustup show
+
 # 切换成 未稳定工具链
 rustup default nightly
 
