@@ -8,6 +8,9 @@
 
 
 ```bash
+# 查看工具链列表
+rustup show
+
 # 安装指定版本
 rustup toolchain install nightly-2021-03-01
 

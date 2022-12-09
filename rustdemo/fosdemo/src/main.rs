@@ -1,5 +1,6 @@
 #![feature(core_intrinsics)]
 #![feature(lang_items)]
+// #![feature(asm)]
 #![no_std]
 #![no_main]
 
