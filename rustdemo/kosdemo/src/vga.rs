@@ -56,6 +56,10 @@ impl ScreenChar {
     fn write(&mut self, other: ScreenChar) {
         self.set(other.ascii_character, other.color_code);
     }
+
+    fn read(&self) -> ScreenChar {
+        Volatile::new(self).read()
+    }
 }
 
 #[repr(transparent)] // ABI 保证结构和代码一致
@@ -105,7 +109,7 @@ impl Writer {
     fn new_line(&mut self) {
         for row in 1..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
-                let character = self.buffer.chars[row][col];
+                let character = self.buffer.chars[row][col].read();
                 self.buffer.chars[row - 1][col].write(character);
             }
         }
@@ -165,4 +169,37 @@ pub fn print_something() {
     writer.write_byte(b'H');
     writer.write_string("ello ");
     write!(writer, "Wörld!\nthe number is {} ", 444).unwrap();
+}
+
+#[cfg(test)]
+use crate::{serial_print, serial_println};
+
+#[test_case]
+fn test_println_simple() {
+    serial_print!("test_println... ");
+    println!("test_println_simple output");
+    serial_println!("[ok]");
+}
+
+#[test_case]
+fn test_println_many() {
+    serial_print!("test_println_many... ");
+    for _ in 0..200 {
+        println!("test_println_many output");
+    }
+    serial_println!("[ok]");
+}
+
+#[test_case]
+fn test_println_output() {
+    serial_print!("test_println_output... ");
+
+    let s = "Some test string that fits on a single line";
+    println!("{}", s);
+    for (i, c) in s.chars().enumerate() {
+        let screen_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
+        assert_eq!(char::from(screen_char.ascii_character), c);
+    }
+
+    serial_println!("[ok]");
 }
