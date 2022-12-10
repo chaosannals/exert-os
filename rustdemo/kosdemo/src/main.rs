@@ -1,14 +1,11 @@
 #![no_std]
 #![no_main]
 #![feature(custom_test_frameworks)]
-#![test_runner(crate::test_runner)]
+#![test_runner(kosdemo::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-mod vga;
-mod uart;
-
 use core::panic::PanicInfo;
-use kosdemo::QemuExitCode;
+use kosdemo::{println, print};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
@@ -38,13 +35,8 @@ fn panic(info: &PanicInfo) -> ! {
     kosdemo::test_panic_handler(info)
 }
 
-pub fn test_runner(tests: &[&dyn Fn()]) {
-    serial_println!("Running {} tests", tests.len());
-    for test in tests {
-        test();
-    }
-    kosdemo::exit_qemu(QemuExitCode::Success);
-}
+#[cfg(test)]
+use kosdemo::{serial_println, serial_print};
 
 #[test_case]
 fn trivial_assertion() {

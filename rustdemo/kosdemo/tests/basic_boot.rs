@@ -21,3 +21,12 @@ pub extern "C" fn _start() -> ! {
 fn panic(info: &PanicInfo) -> ! {
     kosdemo::test_panic_handler(info)
 }
+
+use kosdemo::{println, serial_print, serial_println};
+
+#[test_case]
+fn test_println() {
+    serial_print!("test_println... ");
+    println!("test_println output");
+    serial_println!("[ok]");
+}
