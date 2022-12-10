@@ -4,17 +4,22 @@
 mod vga;
 
 use core::panic::PanicInfo;
-use core::fmt::Write;
+// use crate::{print, println};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    vga::WRITER.lock().write_str("Hello again").unwrap();
-    write!(vga::WRITER.lock(), ",\nsome numbers: {} {}", 42, 1.337).unwrap();
-    loop {}
+    // use core::fmt::Write;
+    // vga::WRITER.lock().write_str("Hello again").unwrap();
+    // write!(vga::WRITER.lock(), ",\nsome numbers: {} {}", 42, 1.337).unwrap();
+    println!("Hello World");
+    print!("the number is {}", 1234);
+    panic!("panic content !!!");
+    // loop {}
 }
 
 #[no_mangle]
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
     loop {}
 }
