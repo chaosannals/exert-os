@@ -30,3 +30,8 @@ test-timeout = 300 # 秒
 
 [profile.release]
 # panic = "abort"
+
+
+[[test]]
+name = "should_panic_2"
+harness = false
