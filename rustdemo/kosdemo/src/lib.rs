@@ -8,6 +8,7 @@
 pub mod vga;
 pub mod uart;
 pub mod interrupts;
+pub mod gdt;
 
 use core::panic::PanicInfo;
 use core::ops::Fn;
@@ -20,6 +21,7 @@ pub enum QemuExitCode {
 }
 
 pub fn init() {
+    gdt::init();
     interrupts::init_idt();
 }
 

@@ -14,7 +14,19 @@ pub extern "C" fn _start() -> ! {
     // vga::WRITER.lock().write_str("Hello again").unwrap();
     // write!(vga::WRITER.lock(), ",\nsome numbers: {} {}", 42, 1.337).unwrap();
     println!("Hello World");
-    x86_64::instructions::interrupts::int3();
+    // x86_64::instructions::interrupts::int3();
+
+    // unsafe {
+    //     // 写入非法地址触发 缺页异常
+    //     *(0xdeadbeef as *mut u64) = 42;
+    // }
+
+    // 无限递归引发栈溢出
+    // fn stack_overflow() {
+    //     stack_overflow();
+    // }
+    // stack_overflow();
+
     print!("the number is {}", 1234);
     // panic!("panic content !!!");
 
