@@ -1,5 +1,18 @@
 # kosdemo
 
+```bash
+# 运行
+cargo run
+
+# 构建
+cargo build
+
+# 运行测试
+cargo test
+# 运行单元测试
+cargo test --lib
+```
+
 ## 依赖
 
 - rustc 1.67.0-nightly

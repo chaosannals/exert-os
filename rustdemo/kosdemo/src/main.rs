@@ -5,14 +5,16 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-use kosdemo::{println, print};
+use kosdemo::{println, print, init};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    init();
     // use core::fmt::Write;
     // vga::WRITER.lock().write_str("Hello again").unwrap();
     // write!(vga::WRITER.lock(), ",\nsome numbers: {} {}", 42, 1.337).unwrap();
     println!("Hello World");
+    x86_64::instructions::interrupts::int3();
     print!("the number is {}", 1234);
     // panic!("panic content !!!");
 
