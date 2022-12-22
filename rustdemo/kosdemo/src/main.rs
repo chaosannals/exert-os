@@ -19,7 +19,23 @@ pub extern "C" fn _start() -> ! {
     // unsafe {
     //     // 写入非法地址触发 缺页异常
     //     *(0xdeadbeef as *mut u64) = 42;
+
+    //     // 把报错的虚拟地址用作指针
+    //     let ptr = 0x204fe0 as *mut u32;
+    //     let x = *ptr; // 读成功。
+    //     println!("read x {:?}", x);
+    //     *ptr = 42; // 写失败。
     // }
+
+    use x86_64::registers::control::Cr3;
+    let (level_4_page_table, _) = Cr3::read();
+    println!("Lv4 page table at {:?}", level_4_page_table.start_address());
+
+    let level_4_table_pointer = 0xffff_ffff_ffff_f000 as *const u64;
+    for i in 0..10 {
+        let entry = unsafe { *level_4_table_pointer.offset(i) };
+        println!("Entry {}: {:#x}", i, entry);
+    }
 
     // 无限递归引发栈溢出
     // fn stack_overflow() {
