@@ -5,10 +5,12 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
+use bootloader::{BootInfo, entry_point};
 use kosdemo::{println, print, init};
 
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+entry_point!(kernel_main);
+
+fn kernel_main(boot_info: &'static BootInfo) -> ! {
     init();
     // use core::fmt::Write;
     // vga::WRITER.lock().write_str("Hello again").unwrap();
@@ -27,14 +29,46 @@ pub extern "C" fn _start() -> ! {
     //     *ptr = 42; // 写失败。
     // }
 
-    use x86_64::registers::control::Cr3;
-    let (level_4_page_table, _) = Cr3::read();
-    println!("Lv4 page table at {:?}", level_4_page_table.start_address());
+    // 启用分页机制后，直接通过物理地址读取失败。（因为此时寻址都采用分页机制，物理地址被当作虚拟地址拿去寻址了）
+    // use x86_64::registers::control::Cr3;
+    // let (level_4_page_table, _) = Cr3::read();
+    // println!("Lv4 page table at {:?}", level_4_page_table.start_address());
+    // let level_4_table_pointer = 0xffff_ffff_ffff_f000 as *const u64;
+    // for i in 0..10 {
+    //     let entry = unsafe { *level_4_table_pointer.offset(i) };
+    //     println!("Entry {}: {:#x}", i, entry);
+    // }
 
-    let level_4_table_pointer = 0xffff_ffff_ffff_f000 as *const u64;
-    for i in 0..10 {
-        let entry = unsafe { *level_4_table_pointer.offset(i) };
-        println!("Entry {}: {:#x}", i, entry);
+    // 显示 L4 页表
+    use kosdemo::memory::active_level_4_table;
+    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let l4_table = unsafe {
+        active_level_4_table(phys_mem_offset)
+    };
+    for (i, entry) in l4_table.iter().enumerate() {
+        if !entry.is_unused() {
+            println!("L4 Entry {}: {:?}",i, entry);
+        }
+    }
+
+    use kosdemo::memory::translate_addr;
+
+    let phys_mem_offset = VirtAddr::new(
+        boot_info.physical_memory_offset
+    );
+
+    let addresses = [
+        0xb8000,
+        0x201008,
+        0x0100_0020_1a10,
+        boot_info.physical_memory_offset,
+    ];
+    for &address in &addresses {
+        let virt = VirtAddr::new(address);
+        let phys = unsafe {
+            translate_addr(virt, phys_mem_offset)
+        };
+        println!("v: {:?} -> p: {:?}", virt, phys);
     }
 
     // 无限递归引发栈溢出
@@ -67,6 +101,7 @@ fn panic(info: &PanicInfo) -> ! {
 
 #[cfg(test)]
 use kosdemo::{serial_println, serial_print};
+use x86_64::VirtAddr;
 
 #[test_case]
 fn trivial_assertion() {
