@@ -6,7 +6,7 @@
 
 use core::panic::PanicInfo;
 use bootloader::{BootInfo, entry_point};
-use kosdemo::{println, print, init};
+use kosdemo::{println, print, init, memory};
 
 entry_point!(kernel_main);
 
@@ -42,6 +42,9 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     // 显示 L4 页表
     use kosdemo::memory::active_level_4_table;
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let mapper = unsafe {
+        memory::init(phys_mem_offset)
+    };
     let l4_table = unsafe {
         active_level_4_table(phys_mem_offset)
     };
@@ -51,12 +54,6 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
         }
     }
 
-    use kosdemo::memory::translate_addr;
-
-    let phys_mem_offset = VirtAddr::new(
-        boot_info.physical_memory_offset
-    );
-
     let addresses = [
         0xb8000,
         0x201008,
@@ -65,9 +62,13 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     ];
     for &address in &addresses {
         let virt = VirtAddr::new(address);
-        let phys = unsafe {
-            translate_addr(virt, phys_mem_offset)
-        };
+
+        // use kosdemo::memory::translate_addr;
+        // let phys = unsafe {
+        //     translate_addr(virt, phys_mem_offset)
+        // };
+        use x86_64::structures::paging::Translate;
+        let phys = mapper.translate_addr(virt);
         println!("v: {:?} -> p: {:?}", virt, phys);
     }
 
@@ -101,7 +102,7 @@ fn panic(info: &PanicInfo) -> ! {
 
 #[cfg(test)]
 use kosdemo::{serial_println, serial_print};
-use x86_64::VirtAddr;
+use x86_64::{VirtAddr};
 
 #[test_case]
 fn trivial_assertion() {
