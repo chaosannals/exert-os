@@ -74,11 +74,18 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 
     // 创建
     use x86_64::structures::paging::Page;
-    let mut frame_allocator = memory::EmptyFrameAllocator;
+    // let mut frame_allocator = memory::EmptyFrameAllocator;
+    let mut frame_allocator = unsafe {
+        memory::BootInfoFrameAllocator::init(&boot_info.memory_map)
+    };
     let page = Page::containing_address(VirtAddr::new(0));
     memory::create_example_mapping(page,&mut mapper, &mut frame_allocator);
     let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
     unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e)};
+
+    let page2 = Page::containing_address(VirtAddr::new(0xdeadbeaf000));
+    memory::create_example_mapping(page2,&mut mapper, &mut frame_allocator);
+    println!("page2 size is {}", page2.size());
 
     // 无限递归引发栈溢出
     // fn stack_overflow() {
