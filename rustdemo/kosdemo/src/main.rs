@@ -42,7 +42,7 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     // 显示 L4 页表
     use kosdemo::memory::active_level_4_table;
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let mapper = unsafe {
+    let mut mapper = unsafe {
         memory::init(phys_mem_offset)
     };
     let l4_table = unsafe {
@@ -71,6 +71,14 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
         let phys = mapper.translate_addr(virt);
         println!("v: {:?} -> p: {:?}", virt, phys);
     }
+
+    // 创建
+    use x86_64::structures::paging::Page;
+    let mut frame_allocator = memory::EmptyFrameAllocator;
+    let page = Page::containing_address(VirtAddr::new(0));
+    memory::create_example_mapping(page,&mut mapper, &mut frame_allocator);
+    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
+    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e)};
 
     // 无限递归引发栈溢出
     // fn stack_overflow() {
